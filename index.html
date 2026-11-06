@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4 To Pass - Painel do Aluno & Calculadora de Notas</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: {
+                            800: '#1E293B',
+                            900: '#0F172A',
+                            950: '#020617',
+                        },
+                        brand: {
+                            blue: '#1E3A8A',
+                            royal: '#2563EB',
+                            lightBg: '#F8FAFC',
+                            gold: '#F59E0B',
+                            goldLight: '#FEF3C7',
+                            goldDark: '#D97706',
+                            brightYellow: '#FACC15',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        @keyframes pulse-fast {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+        }
+        .animate-pulse-fast { animation: pulse-fast 1.5s infinite; }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col selection:bg-brand-gold selection:text-navy-900">
+
+    <!-- Header / Navbar -->
+    <header class="bg-navy-900 text-white shadow-xl sticky top-0 z-40 border-b border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex flex-wrap justify-between items-center gap-4">
+            
+            <!-- Brand Logo -->
+            <div class="flex items-center space-x-3">          
+                <div>
+                    <h1 class="text-2xl font-black tracking-tight leading-none text-white flex items-center gap-2">
+                        4 To Pass <span class="bg-brand-royal/40 text-blue-300 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-blue-400/30">PRO</span>
+                    </h1>
+                    
+                </div>
+            </div>
+
+            <!-- Header Right Stats & User -->
+            <div class="flex items-center gap-3 sm:gap-4">
+                <!-- Streak Badge -->
+                <div class="bg-slate-800/80 border border-slate-700/80 rounded-xl px-3 py-1.5 flex items-center gap-2.5 shadow-inner">
+                    <span class="text-amber-400 text-lg animate-bounce">⚡</span>
+                    <div class="text-left">
+                        <div class="text-[10px] font-bold text-slate-400 uppercase leading-none">Sequência</div>
+                        <div class="text-sm font-extrabold text-amber-300 leading-tight" id="streak-count-display">0 Dias</div>
+                    </div>
+                    <button onclick="doDailyCheckin()" id="btn-checkin" class="ml-1 bg-amber-500/20 hover:bg-amber-500/40 text-amber-300 text-xs font-bold px-2 py-1 rounded-lg border border-amber-500/40 transition">
+                        Check-in
+                    </button>
+                </div>
+
+                <!-- Emergency Mode Quick Button -->
+                <button onclick="openDesesperomodal()" class="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-extrabold px-3.5 py-2 rounded-xl text-xs sm:text-sm flex items-center gap-2 shadow-lg shadow-red-900/40 border border-red-400/30 animate-pulse-fast">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span>MODO DESESPERO</span>
+                </button>
+
+                <!-- User Profile Menu Trigger -->
+                <div class="flex items-center gap-2 border-l border-slate-800 pl-3">
+                    <div class="w-9 h-9 bg-brand-royal text-white rounded-xl flex items-center justify-center font-bold text-sm shadow border border-blue-400/30" id="user-avatar">
+                        E
+                    </div>
+                    <div class="hidden md:block text-left">
+                        <div class="text-xs font-bold text-slate-200" id="user-name-display">Estudante</div>
+                        <button onclick="changeUserName()" class="text-[10px] text-brand-gold hover:underline">Editar Nome</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </header>
+
+    <!-- Navigation Tabs / Subheader -->
+    <nav class="bg-navy-800 border-b border-slate-700 text-slate-300 shadow-md sticky top-[65px] z-30 overflow-x-auto custom-scrollbar">
+        <div class="max-w-7xl mx-auto px-4 flex gap-1 sm:gap-2 text-sm font-medium py-2">
+            <button onclick="switchTab('dashboard')" id="tab-btn-dashboard" class="tab-btn active-tab px-4 py-2 rounded-xl flex items-center gap-2 transition whitespace-nowrap">
+                <i class="fa-solid fa-chart-pie"></i> Painel Principal
+            </button>
+            <button onclick="switchTab('subjects')" id="tab-btn-subjects" class="tab-btn px-4 py-2 rounded-xl flex items-center gap-2 transition whitespace-nowrap">
+                <i class="fa-solid fa-book-open"></i> Matérias & Notas
+            </button>
+            <button onclick="switchTab('simulator')" id="tab-btn-simulator" class="tab-btn px-4 py-2 rounded-xl flex items-center gap-2 transition whitespace-nowrap">
+                <i class="fa-solid fa-sliders"></i> Simulador "E se...?"
+            </button>
+            <button onclick="switchTab('analytics')" id="tab-btn-analytics" class="tab-btn px-4 py-2 rounded-xl flex items-center gap-2 transition whitespace-nowrap">
+                <i class="fa-solid fa-chart-line"></i> Análises & Comparador
+            </button>
+            <button onclick="switchTab('achievements')" id="tab-btn-achievements" class="tab-btn px-4 py-2 rounded-xl flex items-center gap-2 transition whitespace-nowrap">
+                <i class="fa-solid fa-trophy"></i> Conquistas (<span id="unlocked-badges-count">0</span>)
+            </button>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT WRAPPER -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 w-full flex-grow">
+
+        <!-- ================= TAB 1: DASHBOARD PRINCIPAL ================= -->
+        <section id="tab-dashboard" class="tab-content space-y-6">
+
+            <!-- Welcome Banner -->
+            <div class="bg-gradient-to-r from-navy-900 via-brand-blue to-navy-800 rounded-3xl p-6 sm:p-8 text-white shadow-2xl relative overflow-hidden border border-slate-700">
+                <div class="absolute -right-6 -bottom-8 opacity-10 pointer-events-none">
+                    <i class="fa-solid fa-graduation-cap text-[16rem]"></i>
+                </div>
+                <div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                    <div>
+                        <div class="inline-flex items-center gap-2 bg-amber-500/20 text-amber-300 text-xs font-bold px-3 py-1 rounded-full border border-amber-500/30 mb-3">
+                            <i class="fa-solid fa-sparkles"></i> Bem-vindo de volta!
+                        </div>
+                        <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight">
+                            Olá, <span id="welcome-user-name" class="text-brand-brightYellow">Estudante</span>!
+                        </h2>
+                        <p class="text-slate-300 text-sm sm:text-base mt-1 max-w-xl">
+                            Acompanhe seu desempenho escolar em tempo real. Identifique gargalos antes dos exames finais.
+                        </p>
+                    </div>
+
+                    <!-- Period / History Switcher -->
+                    <div class="bg-slate-900/80 backdrop-blur-md p-3.5 rounded-2xl border border-slate-700/80 min-w-[220px]">
+                        <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Período / Ano Letivo</label>
+                        <select id="period-selector" onchange="changePeriod(this.value)" class="w-full bg-slate-800 text-white text-sm font-semibold rounded-xl px-3 py-2 border border-slate-600 focus:outline-none focus:border-brand-gold">
+                            <option value="2026.1">Ano Letivo 2026</option>
+                            <option value="2025.2">Ano Letivo 2025</option>
+                            <option value="2025.1">Semestre Anterior</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Key Metrics Overview Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Metric 1: Média Geral -->
+                <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Média Geral</p>
+                        <h3 class="text-3xl font-black text-navy-900 mt-1" id="dash-overall-avg">0.0</h3>
+                        <p class="text-xs font-semibold mt-1" id="dash-avg-badge">Calculando...</p>
+                    </div>
+                    <div class="w-14 h-14 bg-blue-50 text-brand-royal rounded-2xl flex items-center justify-center text-2xl border border-blue-100">
+                        <i class="fa-solid fa-calculator"></i>
+                    </div>
+                </div>
+
+                <!-- Metric 2: Total de Matérias -->
+                <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Matérias</p>
+                        <h3 class="text-3xl font-black text-navy-900 mt-1" id="dash-total-subjects">0</h3>
+                        <p class="text-xs text-slate-500 mt-1"><span id="dash-passed-count">0</span> aprovadas</p>
+                    </div>
+                    <div class="w-14 h-14 bg-amber-50 text-brand-goldDark rounded-2xl flex items-center justify-center text-2xl border border-amber-100">
+                        <i class="fa-solid fa-book"></i>
+                    </div>
+                </div>
+
+                <!-- Metric 3: Previsão de Aprovação -->
+                <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Previsão Final</p>
+                        <h3 class="text-2xl font-black text-emerald-600 mt-1" id="dash-forecast">Segura</h3>
+                        <p class="text-xs text-slate-500 mt-1" id="dash-risk-count">0 em risco</p>
+                    </div>
+                    <div class="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-2xl border border-emerald-100">
+                        <i class="fa-solid fa-chart-line"></i>
+                    </div>
+                </div>
+
+                <!-- Metric 4: Streak & Status -->
+                <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Meta Diária</p>
+                        <h3 class="text-2xl font-black text-amber-500 mt-1" id="dash-streak-status">Ativa ⚡</h3>
+                        <p class="text-xs text-slate-500 mt-1">Foco e constância</p>
+                    </div>
+                    <div class="w-14 h-14 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center text-2xl border border-amber-100">
+                        <i class="fa-solid fa-fire"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tip of the Day & Motivational Banner -->
+            <div class="bg-amber-50 rounded-2xl p-4 border border-amber-200/80 flex items-start gap-3 text-amber-900 shadow-sm">
+                <div class="bg-amber-400 text-navy-950 p-2 rounded-xl text-lg font-bold flex-shrink-0">
+                    💡
+                </div>
+                <div>
+                    <h4 class="font-bold text-sm text-amber-950">Dica do dia & Motivação:</h4>
+                    <p class="text-xs sm:text-sm text-amber-800 mt-0.5" id="quote-of-the-day">
+                        "Organize suas matérias e acompanhe suas notas para não ser pego de surpresa no final do ano!"
+                    </p>
+                </div>
+            </div>
+
+            <!-- Dashboard Main Content Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+                <!-- Left Column: Desempenho por Matéria (Progress Bars) -->
+                <div class="lg:col-span-8 bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
+                    <div class="flex flex-wrap justify-between items-center gap-2 pb-3 border-b border-slate-100">
+                        <div>
+                            <h3 class="text-lg font-extrabold text-navy-900">Desempenho por Matéria</h3>
+                            <p class="text-xs text-slate-400">Progresso percentual em relação à média necessária para passar</p>
+                        </div>
+                        <button onclick="switchTab('subjects')" class="text-xs font-bold text-brand-royal hover:text-navy-900 bg-blue-50 px-3 py-1.5 rounded-xl border border-blue-100 transition">
+                            <i class="fa-solid fa-plus"></i> Gerenciar Matérias
+                        </button>
+                    </div>
+
+                    <div id="dash-subject-progress-list" class="space-y-4">
+                        <!-- Dynamic Progress Bars Loaded Here -->
+                    </div>
+                </div>
+
+                <!-- Right Column: Personal Highlights & Quick Stats -->
+                <div class="lg:col-span-4 space-y-6">
+                    
+                    <!-- Ranking Pessoal Card -->
+                    <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
+                        <h3 class="text-base font-extrabold text-navy-900 mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-ranking-star text-brand-goldDark"></i> Ranking Pessoal
+                        </h3>
+
+                        <div class="space-y-3">
+                            <!-- Top Subject -->
+                            <div class="bg-emerald-50/70 rounded-2xl p-3.5 border border-emerald-200/80 flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 bg-emerald-500 text-white rounded-xl flex items-center justify-center font-extrabold text-sm shadow">
+                                        🥇
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] font-bold text-emerald-800 uppercase">Melhor Resultado</p>
+                                        <p class="text-sm font-extrabold text-slate-800" id="rank-top-subject-name">—</p>
+                                    </div>
+                                </div>
+                                <span class="text-lg font-black text-emerald-600" id="rank-top-subject-score">—</span>
+                            </div>
+
+                            <!-- Critical Subject -->
+                            <div class="bg-rose-50/70 rounded-2xl p-3.5 border border-rose-200/80 flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 bg-rose-500 text-white rounded-xl flex items-center justify-center font-extrabold text-sm shadow">
+                                        ⚠️
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] font-bold text-rose-800 uppercase">Requer Atenção</p>
+                                        <p class="text-sm font-extrabold text-slate-800" id="rank-worst-subject-name">—</p>
+                                    </div>
+                                </div>
+                                <span class="text-lg font-black text-rose-600" id="rank-worst-subject-score">—</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Emergency Mode Teaser Card -->
+                    <div class="bg-gradient-to-br from-red-900 to-navy-900 rounded-3xl p-6 text-white border border-red-800/80 shadow-lg relative overflow-hidden">
+                        <div class="absolute -right-4 -bottom-4 text-red-500/10 text-8xl font-black pointer-events-none">🚨</div>
+                        <span class="bg-red-500/20 text-red-300 text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-red-500/40">SUPORTE RÁPIDO</span>
+                        <h4 class="text-xl font-black mt-2">Modo Desespero 🚨</h4>
+                        <p class="text-xs text-red-200 mt-1 leading-relaxed">
+                            Faltam poucos dias para a prova final ou recuperação? Descubra a nota exata que você precisa sem rodeios.
+                        </p>
+                        <button onclick="openDesesperomodal()" class="mt-4 w-full bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-400 hover:to-rose-500 text-white font-extrabold py-2.5 rounded-xl text-sm shadow-md transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-bolt"></i> Ativar Modo Desespero
+                        </button>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- ================= TAB 2: MATÉRIAS & NOTAS ================= -->
+        <section id="tab-subjects" class="tab-content hidden space-y-6">
+
+            <!-- Control Bar for Subjects -->
+            <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex flex-wrap justify-between items-center gap-4">
+                <div>
+                    <h2 class="text-xl font-extrabold text-navy-900">Cadastro & Controle de Matérias</h2>
+                    <p class="text-xs text-slate-500">Adicione bimestres, avaliações, defina pesos e configure sua média desejada.</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <button onclick="addNewSubject()" class="bg-brand-royal hover:bg-navy-900 text-white font-bold px-4 py-2.5 rounded-xl text-sm transition shadow-md flex items-center gap-2">
+                        <i class="fa-solid fa-plus"></i> Nova Matéria
+                    </button>
+                    <button onclick="exportDataJSON()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-2.5 rounded-xl text-xs transition border border-slate-300">
+                        <i class="fa-solid fa-download"></i> Exportar
+                    </button>
+                </div>
+            </div>
+
+            <!-- List of Subject Cards -->
+            <div id="subjects-container" class="space-y-6">
+                <!-- Dynamic subject cards rendered here -->
+            </div>
+
+        </section>
+
+        <!-- ================= TAB 3: SIMULADOR DE NOTAS ("E SE...?") ================= -->
+        <section id="tab-simulator" class="tab-content hidden space-y-6">
+
+            <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm">
+                <div class="max-w-2xl">
+                    <span class="bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1 rounded-full border border-amber-200">LABORATÓRIO DE HIPÓTESES</span>
+                    <h2 class="text-2xl font-black text-navy-900 mt-2">Simulador de Notas em Tempo Real</h2>
+                    <p class="text-sm text-slate-500 mt-1">
+                        Teste como notas hipotéticas nas avaliações restantes alteram instantaneamente sua média final e status sem comprometer seu boletim oficial.
+                    </p>
+                </div>
+
+                <div class="mt-6">
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Selecione a matéria para simular:</label>
+                    <select id="sim-subject-select" onchange="loadSubjectSimulator()" class="w-full sm:w-80 bg-slate-50 border border-slate-300 font-bold text-slate-800 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-royal outline-none">
+                        <!-- Options dynamically loaded -->
+                    </select>
+                </div>
+
+                <div id="simulator-interactive-area" class="mt-8 border-t border-slate-200 pt-6">
+                    <!-- Interactive Sliders Rendered Here -->
+                </div>
+            </div>
+
+        </section>
+
+        <!-- ================= TAB 4: ANÁLISES & COMPARADOR ================= -->
+        <section id="tab-analytics" class="tab-content hidden space-y-6">
+
+            <!-- Bimestre Comparison & Analytics -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                
+                <!-- Comparador por Bimestre -->
+                <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
+                    <div>
+                        <h3 class="text-lg font-extrabold text-navy-900">Evolução por Bimestre</h3>
+                        <p class="text-xs text-slate-400">Compara o desempenho médio da turma em cada período letivo</p>
+                    </div>
+
+                    <div class="space-y-4 pt-2" id="bimestre-comparison-bars">
+                        <!-- Dynamic Bimestre bars -->
+                    </div>
+                </div>
+
+                <!-- Metas de Estudo -->
+                <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="text-lg font-extrabold text-navy-900">Metas de Estudo Pessoais</h3>
+                            <p class="text-xs text-slate-400">Defina notas objetivas para cada matéria</p>
+                        </div>
+                    </div>
+
+                    <div id="goals-list-container" class="space-y-3">
+                        <!-- Dynamic Goals list -->
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- ================= TAB 5: CONQUISTAS & GAMIFICAÇÃO ================= -->
+        <section id="tab-achievements" class="tab-content hidden space-y-6">
+
+            <div class="bg-gradient-to-r from-navy-900 via-brand-blue to-navy-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl">
+                <h2 class="text-2xl font-black flex items-center gap-3">
+                    <i class="fa-solid fa-trophy text-brand-gold text-3xl"></i> Quadro de Conquistas Escolares
+                </h2>
+                <p class="text-slate-300 text-sm mt-1 max-w-xl">
+                    Conforme você melhora suas notas, mantém sua sequência e alcança suas metas, novas medalhas são desbloqueadas!
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="badges-grid-container">
+                <!-- Badges will be rendered here -->
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- ================= MODAL: MODO DESESPERO 🚨 ================= -->
+    <div id="modal-desespero" class="fixed inset-0 bg-navy-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 border-4 border-red-500 shadow-2xl relative animate-pulse-fast-once overflow-hidden">
+            
+            <button onclick="closeDesesperomodal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div class="flex items-center gap-3 text-red-600 mb-2">
+                <i class="fa-solid fa-triangle-exclamation text-3xl"></i>
+                <div>
+                    <h3 class="text-2xl font-black leading-none">MODO DESESPERO 🚨</h3>
+                    <p class="text-xs text-red-500 font-bold uppercase tracking-wider">Cálculo de Sobrevivência Acadêmica</p>
+                </div>
+            </div>
+
+            <p class="text-xs text-slate-600 mb-6">
+                Selecione a matéria e quanto ela vale. Vamos calcular exatamente o mínimo para você não reprovar!
+            </p>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Matéria Crítica</label>
+                    <select id="desespero-subject-select" onchange="calculateDesespero()" class="w-full bg-slate-50 border border-slate-300 font-bold text-slate-800 rounded-xl px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-red-500 outline-none">
+                        <!-- Options loaded dynamically -->
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Nota para Passar</label>
+                        <input type="number" id="desespero-passing-target" value="6.0" step="0.5" oninput="calculateDesespero()" class="w-full bg-slate-50 border border-slate-300 font-bold text-slate-800 rounded-xl px-3 py-2 text-sm text-center">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Vale quanto a prova?</label>
+                        <input type="number" id="desespero-exam-weight" value="10.0" step="0.5" oninput="calculateDesespero()" class="w-full bg-slate-50 border border-slate-300 font-bold text-slate-800 rounded-xl px-3 py-2 text-sm text-center">
+                    </div>
+                </div>
+
+                <!-- Desespero Result Banner -->
+                <div id="desespero-result-box" class="mt-6 bg-red-50 border-2 border-red-300 rounded-2xl p-5 text-center">
+                    <p class="text-xs font-bold text-red-700 uppercase">Você precisa tirar exatamente:</p>
+                    <div class="text-5xl font-black text-red-600 my-2" id="desespero-needed-score">0.0</div>
+                    <p class="text-xs font-bold text-slate-700 mt-2" id="desespero-advice-title">Analisando situação...</p>
+                    <p class="text-xs text-slate-500 mt-1 italic" id="desespero-advice-body">Preencha os dados acima.</p>
+                </div>
+            </div>
+
+            <div class="mt-6 flex justify-end">
+                <button onclick="closeDesesperomodal()" class="w-full bg-slate-900 text-white font-bold py-3 rounded-xl text-sm hover:bg-slate-800 transition">
+                    Entendido, vou estudar! 📚
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-navy-950 border-t border-slate-800 py-6 text-slate-400 text-xs">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
+            <div>
+                <span class="font-extrabold text-white text-sm">4 To Pass</span> — O assistente definitivo de aprovação escolar.
+            </div>
+            <div class="flex items-center gap-4">
+                <button onclick="resetAllData()" class="hover:text-red-400 transition">
+                    <i class="fa-solid fa-arrow-rotate-left"></i> Resetar Dados
+                </button>
+                <span>•</span>
+                <span>Dados armazenados localmente</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ================= JAVASCRIPT APPLICATION LOGIC ================= -->
+    <script>
+        // APP STATE STRUCTURE
+        let appState = {
+            user: {
+                name: "Estudante",
+                streakDays: 3,
+                lastCheckinDate: null
+            },
+            currentPeriod: "2026.1",
+            subjects: [],
+            goals: {},
+            unlockedBadges: []
+        };
+
+        // Quotes Bank for Motivational Dica do dia
+        const motivationalQuotes = [
+            "Organize suas matérias e acompanhe suas notas para não ser pego de surpresa no final do ano!",
+            "Estudar um pouco todos os dias é 10x mais eficiente do que virar a noite antes da prova.",
+            "Cada décimo conta! Não descarte nenhum trabalho ou ponto extra.",
+            "O Modo Desespero foi feito para ser evitado. Mantenha suas metas em dia!",
+            "Foco nas matérias em alerta antes que virem recuperação."
+        ];
+
+        // Badges Definition
+        const badgesConfig = [
+            { id: "first_subject", title: "Primeiro Passo", desc: "Adicionou sua primeira matéria", icon: "🌱" },
+            { id: "streak_3", title: "Fogo nos Estudos", desc: "Alcançou 3 dias de sequência", icon: "⚡" },
+            { id: "all_passed", title: "Mestre da Turma", desc: "Todas as matérias estão aprovadas", icon: "👑" },
+            { id: "survivor", title: "Fuga da Recuperação", desc: "Superou um Modo Desespero crítico", icon: "🛡️" },
+            { id: "high_avg", title: "Excelência Acadêmica", desc: "Média geral acima de 8.5", icon: "⭐" },
+            { id: "simulator_pro", title: "Estrategista", desc: "Usou o Simulador de Notas", icon: "🧪" }
+        ];
+
+        // Default Starter Subjects Data
+        const defaultSubjectsData = [
+            {
+                id: "sub_1",
+                name: "Matemática",
+                passingGrade: 6.0,
+                maxGrade: 10.0,
+                useWeights: false,
+                evaluations: [
+                    { name: "1º Bimestre", grade: 6.5, weight: 1, done: true },
+                    { name: "2º Bimestre", grade: 5.0, weight: 1, done: true },
+                    { name: "3º Bimestre", grade: 7.0, weight: 1, done: true },
+                    { name: "4º Bimestre", grade: null, weight: 1, done: false }
+                ]
+            },
+            {
+                id: "sub_2",
+                name: "Português",
+                passingGrade: 6.0,
+                maxGrade: 10.0,
+                useWeights: false,
+                evaluations: [
+                    { name: "1º Bimestre", grade: 8.5, weight: 1, done: true },
+                    { name: "2º Bimestre", grade: 9.0, weight: 1, done: true },
+                    { name: "3º Bimestre", grade: 8.0, weight: 1, done: true },
+                    { name: "4º Bimestre", grade: null, weight: 1, done: false }
+                ]
+            },
+            {
+                id: "sub_3",
+                name: "História",
+                passingGrade: 6.0,
+                maxGrade: 10.0,
+                useWeights: false,
+                evaluations: [
+                    { name: "1º Bimestre", grade: 9.0, weight: 1, done: true },
+                    { name: "2º Bimestre", grade: 9.5, weight: 1, done: true },
+                    { name: "3º Bimestre", grade: 8.5, weight: 1, done: true },
+                    { name: "4º Bimestre", grade: null, weight: 1, done: false }
+                ]
+            },
+            {
+                id: "sub_4",
+                name: "Física",
+                passingGrade: 6.0,
+                maxGrade: 10.0,
+                useWeights: true,
+                evaluations: [
+                    { name: "Prova Teórica 1", grade: 4.5, weight: 2, done: true },
+                    { name: "Laboratório", grade: 7.0, weight: 1, done: true },
+                    { name: "Exame Semestral", grade: null, weight: 3, done: false }
+                ]
+            }
+        ];
+
+        // INITIALIZATION
+        document.addEventListener("DOMContentLoaded", () => {
+            loadState();
+            setRandomQuote();
+            renderAll();
+        });
+
+        // LOCAL STORAGE LOAD / SAVE
+        function saveState() {
+            localStorage.setItem("4topass_app_state", JSON.stringify(appState));
+            checkBadges();
+        }
+
+        function loadState() {
+            const stored = localStorage.getItem("4topass_app_state");
+            if (stored) {
+                try {
+                    appState = JSON.parse(stored);
+                } catch(e) {
+                    appState.subjects = defaultSubjectsData;
+                }
+            } else {
+                appState.subjects = defaultSubjectsData;
+            }
+        }
+
+        function resetAllData() {
+            if (confirm("Deseja realmente resetar todos os dados e restaurar o exemplo inicial?")) {
+                localStorage.removeItem("4topass_app_state");
+                appState.subjects = defaultSubjectsData;
+                appState.unlockedBadges = [];
+                appState.user.streakDays = 1;
+                saveState();
+                renderAll();
+            }
+        }
+
+        // NAVIGATION TAB SWITCHER
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('bg-brand-royal', 'text-white', 'shadow-md');
+                el.classList.add('text-slate-300');
+            });
+
+            const activeTab = document.getElementById(`tab-${tabId}`);
+            const activeBtn = document.getElementById(`tab-btn-${tabId}`);
+            
+            if (activeTab) activeTab.classList.remove('hidden');
+            if (activeBtn) {
+                activeBtn.classList.add('bg-brand-royal', 'text-white', 'shadow-md');
+                activeBtn.classList.remove('text-slate-300');
+            }
+
+            if (tabId === 'simulator') {
+                loadSubjectSimulator();
+                unlockBadge('simulator_pro');
+            } else if (tabId === 'analytics') {
+                renderAnalytics();
+            } else if (tabId === 'achievements') {
+                renderBadges();
+            }
+        }
+
+        // CALCULATIONS CORE ENGINE
+        function computeSubjectStats(subject) {
+            let totalWeight = 0;
+            let currentWeightedSum = 0;
+            let currentWeightSum = 0;
+            let remainingWeightSum = 0;
+
+            subject.evaluations.forEach(ev => {
+                const w = subject.useWeights ? (ev.weight || 1) : 1;
+                totalWeight += w;
+
+                if (ev.done && ev.grade !== null) {
+                    currentWeightedSum += ev.grade * w;
+                    currentWeightSum += w;
+                } else {
+                    remainingWeightSum += w;
+                }
+            });
+
+            // Current Average based ONLY on completed exams
+            const currentAverage = currentWeightSum > 0 ? (currentWeightedSum / currentWeightSum) : 0;
+            
+            // Contribution toward the total needed final average scale
+            const accumulatedPoints = totalWeight > 0 ? (currentWeightedSum / totalWeight) : 0;
+            
+            // Needed score average on remaining exams
+            let neededScoreRemaining = 0;
+            let isPossible = true;
+
+            if (remainingWeightSum > 0) {
+                const targetSum = subject.passingGrade * totalWeight;
+                const neededSum = targetSum - currentWeightedSum;
+                neededScoreRemaining = neededSum / remainingWeightSum;
+
+                if (neededScoreRemaining > subject.maxGrade) {
+                    isPossible = false;
+                }
+            }
+
+            const isPassedSecured = accumulatedPoints >= subject.passingGrade;
+            const percentProgress = Math.min(100, Math.round((accumulatedPoints / subject.passingGrade) * 100));
+
+            return {
+                currentAverage: parseFloat(currentAverage.toFixed(2)),
+                accumulatedPoints: parseFloat(accumulatedPoints.toFixed(2)),
+                neededScoreRemaining: parseFloat(Math.max(0, neededScoreRemaining).toFixed(2)),
+                totalWeight,
+                currentWeightSum,
+                remainingWeightSum,
+                isPossible,
+                isPassedSecured,
+                percentProgress
+            };
+        }
+
+        // RENDER ALL COMPONENTS
+        function renderAll() {
+            renderHeaderAndProfile();
+            renderDashboard();
+            renderSubjectsList();
+            renderBadges();
+            saveState();
+        }
+
+        // RENDER HEADER & USER PROFILE
+        function renderHeaderAndProfile() {
+            document.getElementById('user-name-display').innerText = appState.user.name;
+            document.getElementById('welcome-user-name').innerText = appState.user.name;
+            document.getElementById('user-avatar').innerText = appState.user.name.charAt(0).toUpperCase();
+            document.getElementById('streak-count-display').innerText = `${appState.user.streakDays} Dias`;
+            document.getElementById('unlocked-badges-count').innerText = appState.unlockedBadges.length;
+        }
+
+        function changeUserName() {
+            const newName = prompt("Digite seu nome:", appState.user.name);
+            if (newName && newName.trim() !== "") {
+                appState.user.name = newName.trim();
+                renderHeaderAndProfile();
+                saveState();
+            }
+        }
+
+        function doDailyCheckin() {
+            const today = new Date().toDateString();
+            if (appState.user.lastCheckinDate === today) {
+                alert("Você já fez seu check-in hoje! Continue com o bom trabalho. ⚡");
+                return;
+            }
+            appState.user.streakDays += 1;
+            appState.user.lastCheckinDate = today;
+            if (appState.user.streakDays >= 3) unlockBadge('streak_3');
+            renderHeaderAndProfile();
+            saveState();
+            alert(`⚡ Check-in realizado! Sequência atual: ${appState.user.streakDays} dias!`);
+        }
+
+        // RENDER DASHBOARD
+        function renderDashboard() {
+            const subjects = appState.subjects;
+            const container = document.getElementById('dash-subject-progress-list');
+
+            if (subjects.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 py-4 text-center">Nenhuma matéria cadastrada.</p>`;
+                return;
+            }
+
+            let overallAvgSum = 0;
+            let totalPassed = 0;
+            let totalRisk = 0;
+
+            let bestSubj = null;
+            let worstSubj = null;
+
+            let html = "";
+
+            subjects.forEach(subj => {
+                const stats = computeSubjectStats(subj);
+                overallAvgSum += stats.currentAverage;
+
+                if (stats.isPassedSecured) totalPassed++;
+                if (!stats.isPossible || (stats.neededScoreRemaining > 7.5)) totalRisk++;
+
+                // Track Top & Worst
+                if (!bestSubj || stats.currentAverage > bestSubj.stats.currentAverage) {
+                    bestSubj = { name: subj.name, stats };
+                }
+                if (!worstSubj || stats.currentAverage < worstSubj.stats.currentAverage) {
+                    worstSubj = { name: subj.name, stats };
+                }
+
+                // Bar Color
+                let barColor = "bg-brand-royal";
+                let statusBadge = `<span class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">${stats.percentProgress}% da meta</span>`;
+                
+                if (stats.isPassedSecured) {
+                    barColor = "bg-emerald-500";
+                    statusBadge = `<span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">Aprovado</span>`;
+                } else if (!stats.isPossible) {
+                    barColor = "bg-red-500";
+                    statusBadge = `<span class="text-[10px] font-bold text-red-700 bg-red-50 px-2 py-0.5 rounded-full border border-red-200">Em Risco</span>`;
+                } else if (stats.neededScoreRemaining > 7.0) {
+                    barColor = "bg-amber-500";
+                    statusBadge = `<span class="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">Atenção</span>`;
+                }
+
+                html += `
+                    <div class="space-y-1.5">
+                        <div class="flex justify-between items-center text-xs font-bold">
+                            <span class="text-slate-800 font-extrabold">${escapeHtml(subj.name)}</span>
+                            <div class="flex items-center gap-2">
+                                ${statusBadge}
+                                <span class="text-slate-600">${stats.currentAverage} / ${subj.maxGrade}</span>
+                            </div>
+                        </div>
+                        <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden border border-slate-200/60">
+                            <div class="${barColor} h-3 rounded-full transition-all duration-500" style="width: ${stats.percentProgress}%"></div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+
+            // Stats Card Calculation
+            const grandAverage = (overallAvgSum / subjects.length).toFixed(1);
+            document.getElementById('dash-overall-avg').innerText = grandAverage;
+            document.getElementById('dash-total-subjects').innerText = subjects.length;
+            document.getElementById('dash-passed-count').innerText = totalPassed;
+            document.getElementById('dash-risk-count').innerText = `${totalRisk} em risco`;
+
+            // Badge & Forecast
+            const avgBadge = document.getElementById('dash-avg-badge');
+            if (grandAverage >= 8.0) {
+                avgBadge.innerText = "Excelente Desempenho! 🌟";
+                avgBadge.className = "text-xs font-semibold text-emerald-600 mt-1";
+                unlockBadge('high_avg');
+            } else if (grandAverage >= 6.0) {
+                avgBadge.innerText = "Dentro da Média 👍";
+                avgBadge.className = "text-xs font-semibold text-blue-600 mt-1";
+            } else {
+                avgBadge.innerText = "Abaixo da Média ⚠️";
+                avgBadge.className = "text-xs font-semibold text-rose-600 mt-1";
+            }
+
+            const forecastEl = document.getElementById('dash-forecast');
+            if (totalRisk === 0) {
+                forecastEl.innerText = "Altíssima";
+                forecastEl.className = "text-2xl font-black text-emerald-600 mt-1";
+            } else if (totalRisk <= 2) {
+                forecastEl.innerText = "Atenção";
+                forecastEl.className = "text-2xl font-black text-amber-500 mt-1";
+            } else {
+                forecastEl.innerText = "Crítica";
+                forecastEl.className = "text-2xl font-black text-red-600 mt-1";
+            }
+
+            if (totalPassed === subjects.length && subjects.length > 0) {
+                unlockBadge('all_passed');
+            }
+
+            // Ranking Updates
+            if (bestSubj) {
+                document.getElementById('rank-top-subject-name').innerText = bestSubj.name;
+                document.getElementById('rank-top-subject-score').innerText = bestSubj.stats.currentAverage;
+            }
+            if (worstSubj) {
+                document.getElementById('rank-worst-subject-name').innerText = worstSubj.name;
+                document.getElementById('rank-worst-subject-score').innerText = worstSubj.stats.currentAverage;
+            }
+        }
+
+        // RENDER SUBJECTS TAB
+        function renderSubjectsList() {
+            const container = document.getElementById('subjects-container');
+            if (appState.subjects.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-white rounded-3xl p-10 text-center border-2 border-dashed border-slate-200">
+                        <p class="text-slate-500 font-semibold mb-3">Nenhuma matéria adicionada ainda.</p>
+                        <button onclick="addNewSubject()" class="bg-brand-royal text-white px-5 py-2.5 rounded-xl text-xs font-bold">
+                            + Adicionar Matéria
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = appState.subjects.map(subj => createSubjectCardHTML(subj)).join('');
+        }
+
+        function createSubjectCardHTML(subj) {
+            const stats = computeSubjectStats(subj);
+
+            return `
+            <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden transition hover:shadow-md">
+                
+                <!-- Subject Header -->
+                <div class="bg-slate-50 px-6 py-4 border-b border-slate-100 flex flex-wrap justify-between items-center gap-3">
+                    <div class="flex items-center gap-3 flex-grow max-w-sm">
+                        <div class="w-2.5 h-7 bg-brand-royal rounded-full"></div>
+                        <input type="text" value="${escapeHtml(subj.name)}" onchange="updateSubjectName('${subj.id}', this.value)" class="font-extrabold text-slate-800 text-lg bg-transparent focus:bg-white rounded px-2 py-0.5 border border-transparent hover:border-slate-300 outline-none w-full">
+                    </div>
+                    
+                    <div class="flex items-center gap-3">
+                        <span class="text-xs font-bold px-3 py-1 rounded-full ${stats.isPassedSecured ? 'bg-emerald-100 text-emerald-800' : stats.neededScoreRemaining > 7.0 ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'}">
+                            Média: ${stats.currentAverage}
+                        </span>
+                        <button onclick="removeSubject('${subj.id}')" class="text-slate-400 hover:text-red-500 text-sm p-1.5 transition">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Subject Body Grid -->
+                <div class="p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    
+                    <!-- Evaluations List Column -->
+                    <div class="lg:col-span-7 space-y-4">
+                        <div class="flex items-center justify-between text-xs font-bold text-slate-400 uppercase">
+                            <span>Avaliação</span>
+                            <div class="flex gap-4 pr-6">
+                                <span>Nota</span>
+                                ${subj.useWeights ? '<span>Peso</span>' : ''}
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            ${subj.evaluations.map((ev, idx) => `
+                                <div class="flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-200">
+                                    <input type="checkbox" ${ev.done ? 'checked' : ''} onchange="updateEval('${subj.id}', ${idx}, 'done', this.checked)" class="w-4 h-4 text-brand-royal rounded border-slate-300">
+                                    <input type="text" value="${escapeHtml(ev.name)}" onchange="updateEval('${subj.id}', ${idx}, 'name', this.value)" class="flex-grow bg-transparent text-xs font-semibold text-slate-700 outline-none px-1">
+                                    
+                                    <input type="number" step="0.1" min="0" max="${subj.maxGrade}" placeholder="—" value="${ev.grade !== null ? ev.grade : ''}" onchange="updateEval('${subj.id}', ${idx}, 'grade', this.value)" class="w-16 font-bold text-center text-xs text-slate-800 bg-white border border-slate-300 rounded-lg py-1">
+                                    
+                                    ${subj.useWeights ? `
+                                        <input type="number" step="0.5" min="0.1" value="${ev.weight}" onchange="updateEval('${subj.id}', ${idx}, 'weight', this.value)" class="w-12 text-center text-xs font-semibold text-slate-500 bg-slate-100 border border-slate-300 rounded-lg py-1">
+                                    ` : ''}
+
+                                    <button onclick="removeEval('${subj.id}', ${idx})" class="text-slate-300 hover:text-red-500 text-xs px-1">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                </div>
+                            `).join('')}
+                        </div>
+
+                        <button onclick="addEval('${subj.id}')" class="w-full py-2 border-2 border-dashed border-slate-200 hover:border-brand-royal text-slate-500 hover:text-brand-royal text-xs font-bold rounded-xl transition">
+                            + Adicionar Avaliação
+                        </button>
+                    </div>
+
+                    <!-- 4 TO PASS RESULT SUMMARY BOX -->
+                    <div class="lg:col-span-5 bg-slate-50 p-5 rounded-2xl border border-slate-200 flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-center text-xs font-extrabold text-navy-900 mb-2">
+                                <span>ANÁLISE DE APROVAÇÃO</span>
+                                <span class="text-slate-400">Meta: ${subj.passingGrade}</span>
+                            </div>
+
+                            <div class="bg-white p-4 rounded-xl border border-slate-200 text-center shadow-sm my-3">
+                                ${stats.isPassedSecured ? `
+                                    <p class="text-xs font-bold text-emerald-600">Aprovado nesta matéria! 🎉</p>
+                                    <p class="text-[11px] text-slate-400 mt-0.5">Pontuação necessária alcançada.</p>
+                                ` : !stats.isPossible ? `
+                                    <p class="text-xs font-bold text-red-600">Necessário Recuperação 🚨</p>
+                                    <p class="text-[11px] text-slate-400 mt-0.5">Mesmo com nota máxima não atinge ${subj.passingGrade}.</p>
+                                ` : `
+                                    <p class="text-[11px] font-bold text-slate-400 uppercase">Quanto falta para passar nas restantes:</p>
+                                    <div class="text-3xl font-black text-brand-goldDark my-1">${stats.neededScoreRemaining}</div>
+                                    <p class="text-[11px] text-slate-500">Média necessária em cada prova pendente.</p>
+                                `}
+                            </div>
+                        </div>
+
+                        <div class="text-[11px] text-slate-400 flex justify-between items-center border-t border-slate-200 pt-3">
+                            <span>Pesos: <strong>${subj.useWeights ? 'Personalizados' : 'Iguais'}</strong></span>
+                            <button onclick="toggleWeights('${subj.id}')" class="text-brand-royal hover:underline font-bold">Alternar Pesos</button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            `;
+        }
+
+        // SUBJECT CONTROL FUNCTIONS
+        function addNewSubject() {
+            const newSubj = {
+                id: "sub_" + Date.now(),
+                name: "Nova Matéria " + (appState.subjects.length + 1),
+                passingGrade: 6.0,
+                maxGrade: 10.0,
+                useWeights: false,
+                evaluations: [
+                    { name: "1º Bimestre", grade: null, weight: 1, done: false },
+                    { name: "2º Bimestre", grade: null, weight: 1, done: false }
+                ]
+            };
+            appState.subjects.push(newSubj);
+            unlockBadge('first_subject');
+            renderAll();
+        }
+
+        function removeSubject(subjId) {
+            if (confirm("Remover esta matéria do boletim?")) {
+                appState.subjects = appState.subjects.filter(s => s.id !== subjId);
+                renderAll();
+            }
+        }
+
+        function updateSubjectName(subjId, val) {
+            const subj = appState.subjects.find(s => s.id === subjId);
+            if (subj) subj.name = val || "Sem Nome";
+            saveState();
+        }
+
+        function toggleWeights(subjId) {
+            const subj = appState.subjects.find(s => s.id === subjId);
+            if (subj) subj.useWeights = !subj.useWeights;
+            renderAll();
+        }
+
+        function addEval(subjId) {
+            const subj = appState.subjects.find(s => s.id === subjId);
+            if (subj) {
+                subj.evaluations.push({ name: `Avaliação ${subj.evaluations.length + 1}`, grade: null, weight: 1, done: false });
+                renderAll();
+            }
+        }
+
+        function removeEval(subjId, idx) {
+            const subj = appState.subjects.find(s => s.id === subjId);
+            if (subj && subj.evaluations.length > 1) {
+                subj.evaluations.splice(idx, 1);
+                renderAll();
+            }
+        }
+
+        function updateEval(subjId, idx, field, val) {
+            const subj = appState.subjects.find(s => s.id === subjId);
+            if (!subj) return;
+            const item = subj.evaluations[idx];
+
+            if (field === 'name') item.name = val;
+            if (field === 'grade') {
+                const parsed = parseFloat(val);
+                item.grade = isNaN(parsed) ? null : Math.min(Math.max(0, parsed), subj.maxGrade);
+                item.done = item.grade !== null;
+            }
+            if (field === 'weight') item.weight = parseFloat(val) || 1;
+            if (field === 'done') {
+                item.done = val;
+                if (!item.done) item.grade = null;
+            }
+            renderAll();
+        }
+
+        // SIMULATOR REAL-TIME LOGIC
+        function loadSubjectSimulator() {
+            const select = document.getElementById('sim-subject-select');
+            select.innerHTML = appState.subjects.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
+
+            if (appState.subjects.length > 0) {
+                runSubjectSimulation(appState.subjects[0].id);
+            }
+        }
+
+        function runSubjectSimulation(subjId) {
+            const subj = appState.subjects.find(s => s.id === subjId || s.id === document.getElementById('sim-subject-select').value);
+            if (!subj) return;
+
+            const area = document.getElementById('simulator-interactive-area');
+            
+            // Build editable simulated evaluations list
+            let html = `
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <div class="lg:col-span-7 space-y-4">
+                        <h4 class="text-xs font-bold text-slate-400 uppercase">Ajuste os Sliders para testar hipoteticamente:</h4>
+            `;
+
+            subj.evaluations.forEach((ev, idx) => {
+                const val = ev.grade !== null ? ev.grade : 5.0;
+                html += `
+                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
+                        <div class="flex justify-between text-xs font-bold">
+                            <span class="text-slate-700">${escapeHtml(ev.name)}</span>
+                            <span class="text-brand-royal font-extrabold text-sm" id="sim-val-display-${idx}">${val}</span>
+                        </div>
+                        <input type="range" min="0" max="${subj.maxGrade}" step="0.1" value="${val}" oninput="updateSimVal(${idx}, this.value, '${subj.id}')" class="w-full accent-brand-royal cursor-pointer">
+                    </div>
+                `;
+            });
+
+            html += `
+                    </div>
+                    <div class="lg:col-span-5 bg-gradient-to-br from-navy-900 to-brand-blue rounded-3xl p-6 text-white flex flex-col justify-between shadow-xl">
+                        <div>
+                            <span class="text-[10px] font-bold bg-amber-400 text-navy-950 px-2.5 py-0.5 rounded-full">RESULTADO SIMULADO</span>
+                            <h4 class="text-xl font-extrabold mt-3">Média Projetada:</h4>
+                            <div class="text-5xl font-black text-brand-brightYellow my-2" id="sim-projected-avg">0.0</div>
+                            <p class="text-xs text-slate-300" id="sim-projected-status">Ajuste os sliders ao lado...</p>
+                        </div>
+                        <p class="text-[10px] text-slate-400 border-t border-slate-700/80 pt-3">As alterações aqui são apenas simulações temporárias.</p>
+                    </div>
+                </div>
+            `;
+
+            area.innerHTML = html;
+            recalcSimulation(subj);
+        }
+
+        function updateSimVal(idx, val, subjId) {
+            document.getElementById(`sim-val-display-${idx}`).innerText = val;
+            const subj = appState.subjects.find(s => s.id === subjId);
+            if (subj) recalcSimulation(subj);
+        }
+
+        function recalcSimulation(subj) {
+            let sum = 0;
+            let weights = 0;
+            subj.evaluations.forEach((ev, idx) => {
+                const slider = document.querySelectorAll('#simulator-interactive-area input[type="range"]')[idx];
+                const w = subj.useWeights ? ev.weight : 1;
+                const v = slider ? parseFloat(slider.value) : (ev.grade || 0);
+                sum += v * w;
+                weights += w;
+            });
+
+            const projAvg = (sum / weights).toFixed(1);
+            document.getElementById('sim-projected-avg').innerText = projAvg;
+            
+            const statusEl = document.getElementById('sim-projected-status');
+            if (projAvg >= subj.passingGrade) {
+                statusEl.innerText = "Com essas notas você ESTÁ APROVADO! 🎉";
+                statusEl.className = "text-xs text-emerald-300 font-bold";
+            } else {
+                statusEl.innerText = `Você ainda ficaria ${(subj.passingGrade - projAvg).toFixed(1)} pontos abaixo da média.`;
+                statusEl.className = "text-xs text-amber-300 font-bold";
+            }
+        }
+
+        // MODO DESESPERO MODAL & CALCULATOR
+        function openDesesperomodal() {
+            const select = document.getElementById('desespero-subject-select');
+            select.innerHTML = appState.subjects.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
+            document.getElementById('modal-desespero').classList.remove('hidden');
+            calculateDesespero();
+        }
+
+        function closeDesesperomodal() {
+            document.getElementById('modal-desespero').classList.add('hidden');
+        }
+
+        function calculateDesespero() {
+            const subjId = document.getElementById('desespero-subject-select').value;
+            const target = parseFloat(document.getElementById('desespero-passing-target').value) || 6.0;
+            const maxVal = parseFloat(document.getElementById('desespero-exam-weight').value) || 10.0;
+
+            const subj = appState.subjects.find(s => s.id === subjId);
+            if (!subj) return;
+
+            const stats = computeSubjectStats(subj);
+            const needed = stats.neededScoreRemaining;
+
+            document.getElementById('desespero-needed-score').innerText = needed;
+
+            const title = document.getElementById('desespero-advice-title');
+            const body = document.getElementById('desespero-advice-body');
+
+            if (needed === 0) {
+                title.innerText = "Tranquilidade Total! 🧘";
+                body.innerText = "Você já está aprovado nesta matéria! Pode dormir em paz.";
+            } else if (needed <= 5.0) {
+                title.innerText = "Situação Sob Controle 👍";
+                body.innerText = "Uma revisão rápida da matéria já garante sua nota com folga.";
+            } else if (needed <= 8.0) {
+                title.innerText = "Atenção Necessária! 📖";
+                body.innerText = "Foco total nos resumos e exercícios. Desligue as redes sociais!";
+            } else if (needed <= 10.0) {
+                title.innerText = "MODO GUERRA ATIVADO! 🚨";
+                body.innerText = "Forme um grupo de estudos, peça ajuda ao professor e estude cada tópico!";
+                unlockBadge('survivor');
+            } else {
+                title.innerText = "Missão Quase Impossível / Recuperação 💀";
+                body.innerText = "A nota necessária ultrapassa o valor da prova normal. Comece a se preparar para a recuperação final!";
+            }
+        }
+
+        // ANALYTICS & GOALS RENDER
+        function renderAnalytics() {
+            // Bimestre Comparison Bars
+            const container = document.getElementById('bimestre-comparison-bars');
+            const bimestres = ["1º Bimestre", "2º Bimestre", "3º Bimestre", "4º Bimestre"];
+            
+            let html = "";
+            bimestres.forEach(bim => {
+                let sum = 0, count = 0;
+                appState.subjects.forEach(s => {
+                    const ev = s.evaluations.find(e => e.name.includes(bim));
+                    if (ev && ev.done && ev.grade !== null) {
+                        sum += ev.grade;
+                        count++;
+                    }
+                });
+                const avg = count > 0 ? (sum / count).toFixed(1) : "—";
+                const pct = count > 0 ? (avg / 10) * 100 : 0;
+
+                html += `
+                    <div class="space-y-1">
+                        <div class="flex justify-between text-xs font-bold">
+                            <span>${bim}</span>
+                            <span class="text-brand-royal">${avg} / 10.0</span>
+                        </div>
+                        <div class="w-full bg-slate-100 rounded-full h-3">
+                            <div class="bg-brand-royal h-3 rounded-full" style="width: ${pct}%"></div>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+
+            // Goals List
+            const goalsContainer = document.getElementById('goals-list-container');
+            goalsContainer.innerHTML = appState.subjects.map(s => `
+                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs">
+                    <span class="font-bold text-slate-800">${escapeHtml(s.name)}</span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-slate-400">Meta:</span>
+                        <input type="number" value="${s.passingGrade}" step="0.5" onchange="updateGoal('${s.id}', this.value)" class="w-14 text-center font-bold bg-white border rounded px-1 py-0.5">
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateGoal(subjId, val) {
+            const subj = appState.subjects.find(s => s.id === subjId);
+            if (subj) {
+                subj.passingGrade = parseFloat(val) || 6.0;
+                renderAll();
+            }
+        }
+
+        // GAMIFICATION & BADGES
+        function unlockBadge(badgeId) {
+            if (!appState.unlockedBadges.includes(badgeId)) {
+                appState.unlockedBadges.push(badgeId);
+                saveState();
+            }
+        }
+
+        function checkBadges() {
+            if (appState.subjects.length > 0) unlockBadge('first_subject');
+        }
+
+        function renderBadges() {
+            const container = document.getElementById('badges-grid-container');
+            container.innerHTML = badgesConfig.map(b => {
+                const isUnlocked = appState.unlockedBadges.includes(b.id);
+                return `
+                    <div class="bg-white rounded-2xl p-5 border ${isUnlocked ? 'border-amber-300 shadow-md' : 'border-slate-200 opacity-50'} text-center flex flex-col items-center justify-between">
+                        <div class="text-4xl mb-2">${b.icon}</div>
+                        <div>
+                            <h4 class="font-extrabold text-sm text-navy-900">${b.title}</h4>
+                            <p class="text-[11px] text-slate-500 mt-1">${b.desc}</p>
+                        </div>
+                        <span class="mt-4 text-[10px] font-bold px-3 py-1 rounded-full ${isUnlocked ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-400'}">
+                            ${isUnlocked ? 'Conquistado 🎉' : 'Bloqueado 🔒'}
+                        </span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // UTILS
+        function setRandomQuote() {
+            const q = motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
+            document.getElementById('quote-of-the-day').innerText = `"${q}"`;
+        }
+
+        function exportDataJSON() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appState, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `4ToPass_Boletim_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        function changePeriod(val) {
+            appState.currentPeriod = val;
+            saveState();
+            renderAll();
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+        }
+    </script>
+
+</body>
+</html>

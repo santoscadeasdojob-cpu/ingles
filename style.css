@@ -1,0 +1,38 @@
+/* Custom Scrollbars */
+.custom-scrollbar::-webkit-scrollbar {
+width: 6px;
+height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+background: #f1f5f9;
+border-radius: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+background: #cbd5e1;
+border-radius: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+background: #94a3b8;
+}
+
+/* Animations */
+@keyframes pulse-fast {
+0%, 100% {
+transform: scale(1);
+}
+50% {
+transform: scale(1.03);
+}
+}
+
+.animate-pulse-fast {
+animation: pulse-fast 1.5s infinite;
+}
+
+/* Range input styling overrides */
+input[type=range]::-webkit-slider-thumb {
+box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+}
